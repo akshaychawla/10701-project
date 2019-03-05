@@ -102,3 +102,7 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+# Caltech 101 dataset
+./101_ObjectCategories.tar.gz 
+./101_ObjectCategories/
