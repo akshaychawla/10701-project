@@ -22,6 +22,7 @@ def get_dataset(root_folder):
     cal_transform = transforms.Compose([
             transforms.Resize((RESIZE_HEIGHT,RESIZE_WIDTH)),
             transforms.ToTensor(),
+            transforms.Lambda(lambda x: x.flatten())
     ])
 
     root_folder = "../101_ObjectCategories/"
@@ -29,7 +30,7 @@ def get_dataset(root_folder):
 
     return caltech101
 
-def get_loader(root_folder, batch_size=16, shuffle=False, num_workers=0):
+def get_loader(root_folder, batch_size=16, shuffle=False, num_workers=0, pin_memory=False):
     """
     Returns a data loader for the caltech 101 dataset
     """
@@ -47,16 +48,16 @@ def get_loader(root_folder, batch_size=16, shuffle=False, num_workers=0):
     valid_sampler = data.SubsetRandomSampler(val_indices) 
 
     train_loader = data.DataLoader( cal101_dset, batch_size=batch_size, 
-                                                shuffle=shuffle,num_workers=num_workers, sampler=train_sampler)
+                                    shuffle=shuffle,num_workers=num_workers, sampler=train_sampler, pin_memory=pin_memory)
     validation_loader = data.DataLoader(cal101_dset, batch_size=batch_size,
-                                                    shuffle=shuffle,num_workers=num_workers, sampler=valid_sampler)
+                                        shuffle=shuffle,num_workers=num_workers, sampler=valid_sampler, pin_memory=pin_memory)
 
     return train_loader, validation_loader
 
 
 
-import ipdb; ipdb.set_trace()
-train_loader, valid_loader = get_loader("../101_ObjectCategories/")
+# import ipdb; ipdb.set_trace()
+# train_loader, valid_loader = get_loader("../101_ObjectCategories/")
 
 
 
