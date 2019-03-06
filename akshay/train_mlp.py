@@ -7,10 +7,20 @@ import os, sys
 
 
 class MLP(nn.Module):
-    def __init__(self, input_size, hidden_size, num_classes):
+    def __init__(self, input_size, hidden_size, num_classes, activation_type):
         super(MLP,self).__init__()
         self.fc1 = nn.Linear(input_size, hidden_size, bias=True)
-        self.act1 = nn.ReLU()
+
+        if activation_type=="sigmoid":
+            self.act1 = nn.Sigmoid()
+        elif activation_type=="tanh":
+            self.act1 = nn.Tanh()
+        elif activation_type=="relu":
+            self.act1 = nn.RelU()
+        else:
+            print("activation type {} has not been implemented".format(activation_type))
+            raise NotImplementedError
+
         self.fc2 = nn.Linear(hidden_size, num_classes, bias=True)
     
     def forward(self, x):
@@ -45,9 +55,13 @@ def calculate_metrics(loader, model, criterion):
     
 def main():
 
-    train_loader, valid_loader = get_loader(root_folder="../101_ObjectCategories/", batch_size=128, num_workers=5, pin_memory=True)
+    # CLI
     hidden_size = int(sys.argv[1])
-    mlp = MLP(30000, hidden_size, num_classes=102) # including the background class  
+    log_folder = sys.argv[2]
+    activation_type = sys.argv[3]
+
+    train_loader, valid_loader = get_loader(root_folder="../101_ObjectCategories/", batch_size=128, num_workers=5, pin_memory=True)
+    mlp = MLP(30000, hidden_size, num_classes=102, activation_type=activation_type) # including the background class  
     mlp.cuda()
     criterion = nn.CrossEntropyLoss()
     criterion.cuda()
@@ -55,7 +69,7 @@ def main():
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min')
 
     # log 
-    writer = SummaryWriter(comment="num_hidden = {}".format(hidden_size))
+    writer = SummaryWriter(log_folder)
 
 
     # train mlp 
