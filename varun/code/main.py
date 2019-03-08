@@ -44,8 +44,7 @@ if(__name__=='__main__'):
     filter_responses = []
     for file in files:
         filter_responses.append(np.load(os.path.join(RESULTS_PATH,file)))	
-    filter_responses = np.concatenate(filter_responses, axis = 0)
-    K = 100
+    filter_responses = np.concatenate(filter_responses, axis = 0)    
     kmeans = sklearn.cluster.KMeans(n_clusters=K, n_jobs=-1).fit(filter_responses)
     dictionary = kmeans.cluster_centers_	
     np.save("../results/train_dictionary.npy", dictionary)
