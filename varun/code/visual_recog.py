@@ -8,7 +8,7 @@ import visual_words
 import matplotlib.pyplot as plt
 import skimage.io
 
-def build_recognition_system(X, y, num_workers=2, K):
+def build_recognition_system(X, y, K, num_workers=2):
 	'''
 	Creates a trained recognition system by generating training features from all training images.
 
@@ -22,7 +22,7 @@ def build_recognition_system(X, y, num_workers=2, K):
 	* SPM_layer_num: number of spatial pyramid layers
 	'''
 	# train_data = np.load("../data/train_data.npz")
-	dictionary = np.load("train_dictionary.npy")
+	dictionary = np.load("../results/train_dictionary.npy")
 	# labels = np.array(train_data['labels'].tolist())
 	list_image_names = []
 	SPM_layer_num = 3
@@ -34,9 +34,9 @@ def build_recognition_system(X, y, num_workers=2, K):
 	pool.join()
 	features = np.array(results)
 	# print("features done\n",features.shape)
-	np.savez("trained_system.npz", dictionary=dictionary, features=features, labels=labels, SPM_layer_num=SPM_layer_num)
+	np.savez("../results/trained_system.npz", dictionary=dictionary, features=features, labels=y, SPM_layer_num=SPM_layer_num)
 	
-def evaluate_recognition_system(num_workers=2):
+def evaluate_recognition_system(X_test, y_test, num_workers=2):
 	'''
 	Evaluates the recognition system for all test images and returns the confusion matrix.
 
@@ -44,22 +44,27 @@ def evaluate_recognition_system(num_workers=2):
 	* num_workers: number of workers to process in parallel
 
 	[output]
-	* conf: numpy.ndarray of shape (8,8)
+	* conf: numpy.ndarray of shape (102,102)
 	* accuracy: accuracy of the evaluated system
 	'''
-	test_data = np.load("../data/test_data.npz")
-	trained_system = np.load("trained_system.npz")
+	# test_data = np.load("../data/test_data.npz")
+	# test_labels = test_data['labels']
+
+	trained_system = np.load("../results/trained_system.npz")
 	dictionary = trained_system['dictionary']
+	print(dictionary.shape)
 	features = trained_system['features']
 	train_labels = trained_system['labels']
-	test_labels = test_data['labels']
+	
 	SPM_layer_num = trained_system['SPM_layer_num']	
-	num_test_img = test_data['image_names'].shape[0]
-	num_classes = 8
+	
+
+
+	num_classes = len(set(y_test))
 	conf_mtx = np.zeros((num_classes, num_classes))
 	list_test_img = []
-	for i, path in enumerate(test_data['image_names'].tolist()):
-		list_test_img.append((i,"../data/"+path[0],dictionary,features, train_labels, test_labels, SPM_layer_num))
+	for i, path in enumerate(X_test):
+		list_test_img.append((i,path,dictionary,features, train_labels, y_test, SPM_layer_num))
 	pool = multiprocessing.Pool(num_workers)
 	results = pool.map(classify,list_test_img)
 	pool.close()
@@ -75,11 +80,18 @@ def classify(args):
 	i,path,dictionary,features, train_labels, test_labels, SPM_layer_num = args
 	image = skimage.io.imread(path)
 	image = image.astype('float')/255
-	if(image.shape[2]!=3):
+	if(len(image.shape)!=3):
 		image = visual_words.to_rgb(image)
 	wordmap = visual_words.get_visual_words(image,dictionary)
 	hist = get_feature_from_wordmap_SPM(wordmap,SPM_layer_num,dictionary.shape[0])	
-	train_index = np.argmax(distance_to_set(hist, features))
+	
+	# top10_indices = np.argpartition(distance_to_set(hist, features),-10)[-10:]
+	# (values,counts) = np.unique(top10_indices,return_counts=True)
+	# train_index=np.argmax(counts)
+	# train_index = np.argmax(distance_to_set(hist, features))
+
+	train_index = np.argmax(distance_to_set(hist, features))	
+
 	train_label = train_labels[train_index]
 	test_label = test_labels[i]
 	return train_label, test_label	
@@ -103,7 +115,7 @@ def get_image_feature(file_path,dictionary,layer_num,K):
 	'''
 	image = skimage.io.imread(file_path)
 	image = image.astype('float')/255
-	if(image.shape[2]!=3):
+	if(len(image.shape)!=3):
 		image = visual_words.to_rgb(image)		
 	wordmap = visual_words.get_visual_words(image,dictionary)
 	spm_features = get_feature_from_wordmap_SPM(wordmap, layer_num, K)
@@ -125,6 +137,7 @@ def distance_to_set(word_hist,histograms):
 	intersection similarity between word hist 
 	and each training sample as a vector of length T
 	'''	
+	# print(word_hist.shape, histograms.shape)
 	return np.sum(np.minimum(word_hist, histograms), axis = 1)
 
 def get_feature_from_wordmap(wordmap,dict_size):
