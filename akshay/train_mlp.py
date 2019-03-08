@@ -16,7 +16,7 @@ class MLP(nn.Module):
         elif activation_type=="tanh":
             self.act1 = nn.Tanh()
         elif activation_type=="relu":
-            self.act1 = nn.RelU()
+            self.act1 = nn.ReLU()
         else:
             print("activation type {} has not been implemented".format(activation_type))
             raise NotImplementedError
