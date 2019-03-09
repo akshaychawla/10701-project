@@ -15,6 +15,7 @@ VLFear setup matlab:
     >> explicit_kernel_map
 
 ----- Classification ----- 
-Install sckit learn
+Install sckit learn: pip install scikit-learn
+Install h5py: pip install h5py 
 Run python dense_sift_classify.py
 Draw results mentioned in report: python draw_graph.py
