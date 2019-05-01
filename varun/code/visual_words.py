@@ -20,7 +20,7 @@ BASE_PATH='../data/101_ObjectCategories'
 def to_rgb(img):
 	if(img.ndim == 2):
 		print("GRAYSCALE")
-		rgb_img = np.empty((img.shape[0], img.shape[1]))
+		rgb_img = np.empty((img.shape[0], img.shape[1], 3))
 		rgb_img[:,:,0] = img
 		rgb_img[:,:,1] = img
 		rgb_img[:,:,2] = img
@@ -38,7 +38,7 @@ def extract_filter_responses(image):
 	[output]
 	* filter_responses: numpy.ndarray of shape (H,W,3F)
 	'''
-	if(image.shape[2]!=3): #if not RGB, replicate across 3 axes
+	if(len(image.shape)!=3): #if not RGB, replicate across 3 axes
 		image = to_rgb(image)
 
 	scales = [1, 2, 4, 8, math.sqrt(2)*8]
@@ -96,7 +96,8 @@ def compute_dictionary_one_image(args):
 	i,alpha,image_path = args
 	image = skimage.io.imread(image_path)
 	image = image.astype('float')/255
-	if(image.shape[2]!=3):
+	print(image.shape, image_path)
+	if(len(image.shape)!=3):
 		image = to_rgb(image)
 	filter_responses = extract_filter_responses(image)
 	shuffled_filter_responses = np.random.permutation(filter_responses)
@@ -135,11 +136,11 @@ def compute_dictionary(list_image_names, results_path, K, alpha, num_workers=2):
 	# K = 300
 	kmeans = sklearn.cluster.KMeans(n_clusters=K, n_jobs=-1).fit(filter_responses)
 	dictionary = kmeans.cluster_centers_	
-	np.save("train_dictionary.npy", dictionary)
+	np.save("../results/train_dictionary.npy", dictionary)
 
-if(__name__=='__main__'):
-    x, y = util.get_filenames(BASE_PATH)
-    X_train, X_test, y_train, y_test = train_test_split(x,y,test_size=0.2, random_state=10)
-    alpha = 500
-    K = 300
-    compute_dictionary(X_train, RESULTS_PATH,K, alpha, 8)
+# if(__name__=='__main__'):
+#     x, y = util.get_filenames(BASE_PATH)
+#     X_train, X_test, y_train, y_test = train_test_split(x,y,test_size=0.2, random_state=10)
+#     alpha = 500
+#     K = 300
+#     compute_dictionary(X_train, RESULTS_PATH,K, alpha, 8)
