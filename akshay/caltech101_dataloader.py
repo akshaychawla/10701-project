@@ -22,6 +22,7 @@ def get_dataset(root_folder):
     cal_transform = transforms.Compose([
             transforms.Resize((RESIZE_HEIGHT,RESIZE_WIDTH)),
             transforms.ToTensor(),
+            transforms.Lambda(lambda x: x.flatten())
     ])
 
     root_folder = "../101_ObjectCategories/"
@@ -55,8 +56,8 @@ def get_loader(root_folder, batch_size=16, shuffle=False, num_workers=0):
 
 
 
-import ipdb; ipdb.set_trace()
-train_loader, valid_loader = get_loader("../101_ObjectCategories/")
+# import ipdb; ipdb.set_trace()
+# train_loader, valid_loader = get_loader("../101_ObjectCategories/")
 
 
 
